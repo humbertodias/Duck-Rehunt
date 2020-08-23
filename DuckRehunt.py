@@ -16,12 +16,6 @@ from DuckLib import *
 screen     = pygame.display.set_mode((640,480))
 screen_dim = screen.get_rect()
 
-##class World():
-##
-##    def __init__(self):
-##        self.TITLE = 1
-##        self.
-
 def main():
 
     pygame.display.set_caption("Duck Rehunt: Reckoning")

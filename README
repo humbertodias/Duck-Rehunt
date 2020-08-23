@@ -9,9 +9,9 @@ Music Sequence by Matt Adams-Wenger. Found on VGMusic.com.
 
 duckhunt.ttf from Fonts2u.com.
 
-
 Changelog:
-
+	0.6 (23/09/2020)
+		- Python 3 compatibility
 	0.5 (05/14/2011)
 	    -Basic game functionality
         0.5.1 (05/15/2011)
@@ -24,14 +24,20 @@ This is a work in progress. The scoring is completely broken and the game does n
 
 Requirements:
 
-	-Python 2.6
-	-Pygame 1.9.1 for Python 2.6.
+* Python 3
+* Pygame
+
+	pip3 install -r requirements.txt
+
+Run
+
+	python3 DuckRehunt.py
 
 Coming Soon:
 
-	-Win Condition
-	-Hud
-	-Boss fight?
+* Win Condition
+* Hud
+* Boss fight?
 
 
 
