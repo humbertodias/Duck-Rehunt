@@ -9,19 +9,6 @@ import pygame, random
 pygame.init()
 
 #Load in images
-<<<<<<< HEAD
-dogImg      =  [pygame.image.load("DogIdle.gif"),
-                pygame.image.load("DogDuck.gif")]
-duckImg     = [[pygame.image.load("duckUD1.gif"),
-                pygame.image.load("duckUD2.gif"),
-                pygame.image.load("DuckUD3.gif")],
-               [pygame.image.load("DuckF1.gif"),
-                pygame.image.load("DuckF2.gif"),
-                pygame.image.load("DuckF3.gif")],
-               [pygame.image.load("DuckShot.gif")],
-               [pygame.image.load("DuckFall.gif"),
-                pygame.transform.flip(pygame.image.load("DuckFall.gif"), True, False)]]
-=======
 dogImg = [pygame.image.load("DogIdle.gif"),
           pygame.image.load("DogDuck.gif")]
 duckImg = [[pygame.image.load("DuckUD1.gif"),
@@ -33,7 +20,6 @@ duckImg = [[pygame.image.load("DuckUD1.gif"),
            [pygame.image.load("DuckShot.gif")],
            [pygame.image.load("DuckFall.gif"),
             pygame.transform.flip(pygame.image.load("DuckFall.gif"), True, False)]]
->>>>>>> 807f2a1445c56b1e479d2d67e67c99226717903b
 negaDuckImg = [[pygame.image.load("DarkwingSp.gif")],
                [pygame.image.load("DarkwingFlap.gif"),
                 pygame.image.load("DarkwingFlap2.gif")]]

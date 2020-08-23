@@ -34,8 +34,7 @@ def main():
 
     
     foreground     = setPiece(pygame.image.load("Foreground.gif"), (0,301), 1 )
-    hud            = setPiece(pygame.image.load("Hud.gif"), (22, 400), 3 )
-    setSprites     = pygame.sprite.LayeredUpdates( foreground , hud)
+    setSprites     = pygame.sprite.LayeredUpdates( foreground )
 
     dSprites.add(Dog())
 
@@ -47,7 +46,7 @@ def main():
     shotScore = 0
     global score, ducks
 
-    scoreFont = pygame.font.Font("duckhunt.ttf",20)
+    scoreFont = pygame.font.Font("HelveticaWorld.ttf",20)
     scoreboard = scoreFont.render("%d" % score, 1, (255,255,255))
 
     
