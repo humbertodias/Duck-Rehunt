@@ -27,18 +27,23 @@ Requirements:
 * Python 3
 * Pygame
 
-	pip3 install -r requirements.txt
+```
+pip3 install -r requirements.txt
+```
 
 Run
 
-	python3 DuckRehunt.py
+```
+python3 DuckRehunt.py
+```
+
+![](python3.png)	
 
 Coming Soon:
 
 * Win Condition
 * Hud
 * Boss fight?
-
 
 
 Contact:
