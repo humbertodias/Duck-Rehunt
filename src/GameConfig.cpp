@@ -42,7 +42,10 @@ const char* FONT_FILE = "assets/HelveticaWorld.ttf";
 
 // Game specific constants
 const int FOREGROUND_Y_POS = 301;
+const int NORMAL_DUCK_SHOT_W = 48;
+const int NORMAL_DUCK_SHOT_H = 42;
 const int DOG_SPAWN_Y_START = 440;
 const int DOG_RELEASE_Y_TARGET = 200;
 const int DOG_RETREAT_Y_END = 320;
+const int DOG_DEFAULT_WIDTH = 70; // Matches DOG_DUCK_W and DOG_IDLE_W from Dog.cpp
 const int DUCK_FLYAWAY_Y_LIMIT = 500;

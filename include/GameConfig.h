@@ -43,9 +43,12 @@ extern const char* FONT_FILE;
 
 // Game specific constants
 extern const int FOREGROUND_Y_POS;
+extern const int NORMAL_DUCK_SHOT_W; // Dimensions for the standard shot sprite
+extern const int NORMAL_DUCK_SHOT_H;
 extern const int DOG_SPAWN_Y_START;
 extern const int DOG_RELEASE_Y_TARGET;
 extern const int DOG_RETREAT_Y_END;
+extern const int DOG_DEFAULT_WIDTH; // Default width for dog sprite for placement calculations
 extern const int DUCK_FLYAWAY_Y_LIMIT;
 
 #endif // GAMECONFIG_H

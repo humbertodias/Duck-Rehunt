@@ -113,6 +113,32 @@ void Game::loadAssets() {
     // For now, assuming the foreground image is SCREEN_WIDTH x (SCREEN_HEIGHT - FOREGROUND_Y_POS)
     // The original foreground is 640x179.
 
+    // Load Crosshair texture - Pygame crosshair is 30x30
+    // The Crosshair.gif from Pygame has a blue background (0,0,255) which needs to be color-keyed.
+    if (TextureManager::Instance()->load(CROSSHAIR_IMG, "crosshair", m_pRenderer, 0, 0, 255)) {
+        m_crosshair = std::make_unique<Crosshair>("crosshair", 0, 0, 30, 30);
+    } else {
+        std::cerr << "Failed to load crosshair texture or create crosshair object." << std::endl;
+    }
+
+    // Load GunFlash texture - Pygame Gunshot.gif is 100x100 with black background (0,0,0)
+    if (!TextureManager::Instance()->load(GUNSHOT_IMG, "gunflash", m_pRenderer, 0, 0, 0)) {
+        std::cerr << "Failed to load gunflash texture." << std::endl;
+    }
+
+    // Load Duck Assets
+    NormalDuck::loadSharedAssets(m_pRenderer);
+    NegaDuck::loadSharedAssets(m_pRenderer);
+
+    // Load Dog Assets
+    Dog::loadSharedAssets(m_pRenderer);
+
+    // Create Dog instance
+    // Initial position from Pygame: random.randrange(45,595), 440
+    int initialDogX = getRandomRange(45, SCREEN_WIDTH - 45 - DOG_DEFAULT_WIDTH);
+    m_dog = std::make_unique<Dog>(initialDogX, DOG_SPAWN_Y_START);
+
+
     // Load Sounds
     m_pMusic = Mix_LoadMUS(MUSIC_SND);
     if (!m_pMusic) {
@@ -172,10 +198,47 @@ void Game::handleEvents() {
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT) {
-                    // Play gunshot sound
-                    if(m_pGunshotSound) Mix_PlayChannel(-1, m_pGunshotSound, 0);
-                    // Handle shooting logic (collision detection with ducks) - TODO
-                    // Create gunshot flash - TODO
+                    playSound("gunshot");
+
+                    // Create gunshot flash
+                    // Pygame flash lasts 5 frames. FPS is 60.
+                    // Pygame Gunshot.gif is 100x100
+                    m_gunFlashes.push_back(std::make_unique<GunFlash>("gunflash",
+                                                                     static_cast<int>(m_mousePosition.x),
+                                                                     static_cast<int>(m_mousePosition.y),
+                                                                     100, 100, 5));
+
+                    // Handle shooting logic (collision detection with ducks)
+                    SDL_Point mouseP = {static_cast<int>(m_mousePosition.x), static_cast<int>(m_mousePosition.y)};
+                    int scoreFromThisShot = 0;
+                    // Iterate in reverse to handle potential removals or multiple overlapping sprites correctly,
+                    // though for now, we don't remove immediately on shot.
+                    for (auto it = m_ducks.rbegin(); it != m_ducks.rend(); ++it) {
+                        Duck* duck = it->get(); // Get raw pointer for interaction
+                        if (duck && !duck->isDead() && duck->isActive()) { // Check if duck is active and not already shot
+                            if (SDL_PointInRect(&mouseP, &duck->getCollider())) {
+                                duck->shoot(); // Duck handles its state change to SHOT/FALLING
+                                if (duck->isEnemy()) {
+                                    scoreFromThisShot -= 50; // NegaDuck
+                                } else {
+                                    scoreFromThisShot += 5;  // NormalDuck
+                                }
+                                // Pygame had a multiplier for multiple ducks hit at once.
+                                // For now, we process one hit duck per click event iteration.
+                                // If multiple ducks overlap, this loop will find the "topmost" one first if rendered last.
+                                // To hit multiple, we'd need to not break and sum up scores.
+                                // For simplicity, let's assume one primary target per click for now.
+                                // If we want to allow multiple hits, remove the 'break'.
+                                // However, Pygame's pointCollide would get all, then multiply.
+                                // Let's stick to one effective hit per click for now, which is simpler.
+                                break;
+                            }
+                        }
+                    }
+                    if (scoreFromThisShot != 0) {
+                        m_score += scoreFromThisShot;
+                        updateScoreDisplay();
+                    }
                 }
                 break;
             default:
@@ -185,10 +248,42 @@ void Game::handleEvents() {
 }
 
 void Game::update(float deltaTime) {
-    // Update game objects - TODO
-    // m_crosshair->setPosition(m_mousePosition.x - crosshair_width/2, m_mousePosition.y - crosshair_height/2);
-    // Update ducks, dog, flashes
-    // Check for collisions
+    // Update crosshair position
+    if (m_crosshair) {
+        // Center the crosshair on the mouse cursor
+        float crosshairWidth = static_cast<float>(m_crosshair->getWidth());
+        float crosshairHeight = static_cast<float>(m_crosshair->getHeight());
+        m_crosshair->setPosition(m_mousePosition.x - crosshairWidth / 2.0f,
+                                 m_mousePosition.y - crosshairHeight / 2.0f);
+        m_crosshair->update(deltaTime);
+    }
+
+    // Update GunFlashes and remove expired ones
+    for (auto it = m_gunFlashes.begin(); it != m_gunFlashes.end(); /* increment in loop */) {
+        (*it)->update(deltaTime);
+        if ((*it)->isExpired()) {
+            it = m_gunFlashes.erase(it); // Erase and get next valid iterator
+        } else {
+            ++it;
+        }
+    }
+
+    // Update Ducks and remove dead/off-screen ones
+    for (auto it = m_ducks.begin(); it != m_ducks.end(); /* increment in loop */) {
+        (*it)->update(deltaTime);
+        if ((*it)->isTrulyDead()) { // isTrulyDead when fallen off screen
+            it = m_ducks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // Update Dog
+    if (m_dog) {
+        m_dog->update(deltaTime);
+    }
+
+    // Check for collisions (shooting) - will be in handleEvents or a dedicated collision step
     // Garbage collect dead ducks/flashes
 }
 
@@ -198,7 +293,13 @@ void Game::render() {
     // Draw background
     if (m_background) m_background->draw(m_pRenderer);
 
-    // Draw game objects (ducks, dog) - TODO
+    // Draw Ducks
+    for (const auto& duck : m_ducks) {
+        duck->draw(m_pRenderer);
+    }
+    if (m_dog) {
+        m_dog->draw(m_pRenderer);
+    }
 
     // Draw foreground
     if (m_foreground) m_foreground->draw(m_pRenderer);
@@ -208,8 +309,15 @@ void Game::render() {
         SDL_RenderCopy(m_pRenderer, m_pScoreTexture, nullptr, &m_scoreRect);
     }
 
-    // Draw gunshot flashes - TODO
-    // Draw crosshair - TODO (at m_mousePosition)
+    // Draw gunshot flashes
+    for (const auto& flash : m_gunFlashes) {
+        flash->draw(m_pRenderer);
+    }
+
+    // Draw crosshair (should be on top of most things)
+    if (m_crosshair) {
+        m_crosshair->draw(m_pRenderer);
+    }
 
     SDL_RenderPresent(m_pRenderer);
 }
@@ -220,17 +328,17 @@ void Game::clean() {
     // Clear game objects
     m_background.reset();
     m_foreground.reset();
-    // m_ducks.clear();
-    // m_dog.reset();
-    // m_crosshair.reset();
-    // m_flashes.clear();
+    m_crosshair.reset();
+    m_gunFlashes.clear();
+    m_ducks.clear();
+    m_dog.reset();
 
 
     // Clean up Textures from TextureManager
     TextureManager::Instance()->clearTexture("background");
     TextureManager::Instance()->clearTexture("foreground");
     TextureManager::Instance()->clearTexture("crosshair");
-    TextureManager::Instance()->clearTexture("gunshot_flash");
+    TextureManager::Instance()->clearTexture("gunflash"); // Corrected from gunshot_flash to gunflash
     // Add other texture IDs used (ducks, dog etc.)
     TextureManager::Instance()->clean(); // Final cleanup of the manager itself if needed, or just clear map
 
@@ -261,6 +369,27 @@ void Game::clean() {
     SDL_Quit();
 
     m_bRunning = false;
+}
+
+void Game::spawnDuck(std::unique_ptr<Duck> duck) {
+    if (duck) {
+        m_ducks.push_back(std::move(duck));
+        // Play quack sound - moved to Dog class as per Pygame logic (quack on release)
+        // if(m_pQuackSound) Mix_PlayChannel(-1, m_pQuackSound, 0);
+    }
+}
+
+void Game::playSound(const std::string& soundID) {
+    if (soundID == "quack" && m_pQuackSound) {
+        Mix_PlayChannel(-1, m_pQuackSound, 0);
+    } else if (soundID == "gunshot" && m_pGunshotSound) {
+        Mix_PlayChannel(-1, m_pGunshotSound, 0);
+    }
+    // Add more sounds here if needed
+}
+
+int Game::getDuckCount() const {
+    return m_ducks.size();
 }
 
 int Game::getRandomRange(int min, int max) {

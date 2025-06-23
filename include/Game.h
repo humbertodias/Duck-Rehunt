@@ -8,7 +8,13 @@
 #include <vector>
 #include <memory> // For smart pointers
 #include <random> // For std::mt19937
-#include "Sprite.h" // Forward declare or include fully if member types are Sprite
+#include "Sprite.h"
+#include "Crosshair.h"
+#include "GunFlash.h"
+#include "Duck.h"
+#include "NormalDuck.h"
+#include "NegaDuck.h"
+#include "Dog.h" // Add Dog header
 #include "GameConfig.h"
 
 
@@ -28,6 +34,9 @@ public:
 
     SDL_Renderer* getRenderer() const { return m_pRenderer; }
     int getScore() const { return m_score; }
+    void spawnDuck(std::unique_ptr<Duck> duck); // Method to add ducks (called by Dog)
+    void playSound(const std::string& soundID); // Play a registered sound effect
+    int getDuckCount() const; // Get current number of active ducks
 
     // Random number generator helper
     int getRandomRange(int min, int max);
@@ -48,10 +57,10 @@ private:
     // Game Objects
     std::unique_ptr<Sprite> m_background;
     std::unique_ptr<Sprite> m_foreground;
-    // std::vector<std::unique_ptr<Duck>> m_ducks; // Example for later
-    // std::unique_ptr<Dog> m_dog;
-    // std::unique_ptr<Crosshair> m_crosshair;
-    // std::vector<std::unique_ptr<GunFlash>> m_flashes;
+    std::vector<std::unique_ptr<Duck>> m_ducks;
+    std::unique_ptr<Dog> m_dog;
+    std::unique_ptr<Crosshair> m_crosshair;
+    std::vector<std::unique_ptr<GunFlash>> m_gunFlashes;
 
     // Score
     int m_score;
